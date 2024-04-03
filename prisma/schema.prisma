@@ -14,11 +14,29 @@ datasource db {
 }
 
 model User {
-  id           Int        @id @default(autoincrement())
-  telegramId   String     @unique
-  chatId       String     @unique
-  userName     String
-  isAdmin      Boolean    @default(false)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+ id           Int        @id @default(autoincrement())
+ telegramId   String     @unique
+ chatId       String     @unique
+ userName     String
+ isAdmin      Boolean    @default(false)
+ createdAt    DateTime   @default(now())
+ updatedAt    DateTime   @updatedAt
+ executorOrders OrderExecutor[] // Добавляем связь с исполнительными заказами
+}
+
+model Order {
+ id        Int      @id @default(autoincrement())
+ text      String
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ executors OrderExecutor[] // Указываем, что у заказа может быть несколько исполнителей
+}
+
+model OrderExecutor {
+ orderId    Int
+ userId     Int
+ order      Order @relation(fields: [orderId], references: [id])
+ user       User @relation(fields: [userId], references: [id])
+
+ @@id([orderId, userId])
 }

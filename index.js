@@ -1,22 +1,23 @@
 import TelegramBot from 'node-telegram-bot-api'
 import * as dotenv from 'dotenv'
 import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
 
 dotenv.config()
 
+const prisma = new PrismaClient()
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true })
 
-// ====================== Module BOTa =====================
+// Функция start для инициализации бота
 const start = async () => {
+  // Определение команд бота
   bot.setMyCommands([
     { command: '/start', description: 'Начальное приветствие' },
     { command: '/info', description: 'Получить информацию о пользователе' },
     { command: '/zakaz', description: 'Размещение заказа' }
   ])
 
+  // Обработчик сообщений
   bot.on('message', async (msg) => {
-    console.log(0, msg)
     const text = msg.text
     const telegramId = String(msg.from.id)
     const chatId = String(msg.chat.id)
@@ -25,37 +26,45 @@ const start = async () => {
       : `${msg.from.first_name} ${msg.from.last_name}`
 
     try {
-      if (text === '/start') {
-        try {
-          const user = await getUser(chatId)
-
-          if (!user) {
-            const newUser = await prisma.user.create({
-              data: {
-                telegramId: telegramId,
-                chatId: chatId,
-                userName: userName
-              }
-            })
-            await bot.sendPhoto(
-              chatId,
-              'https://tlgrm.ru/_/stickers/343/879/34387965-f2d4-4e99-b9e9-85e53b0dbd1f/10.jpg'
-            )
-            return bot.sendMessage(
-              chatId,
-              `Добро пожаловать в наш бот: ${newUser.userName}`
-            )
-          }
-
-          return bot.sendMessage(chatId, `команда старт работает только раз`)
-        } catch (error) {
-          console.log(1, 'error', error)
+      if (text.startsWith('/addOrder')) {
+        const orderText = text.replace('/addOrder', '').trim()
+        const user = await getUser(chatId)
+        if (user && user.isAdmin) {
+          const newOrder = await prisma.order.create({
+            data: {
+              text: orderText
+            }
+          })
+          await sendOrderToUsers(newOrder.text)
+          return bot.sendMessage(chatId, `Заказ добавлен: ${newOrder.text}`)
+        } else {
+          return bot.sendMessage(
+            chatId,
+            'У вас нет прав для добавления заказов.'
+          )
         }
+      }
+
+      if (text === '/start') {
+        const user = await getUser(chatId)
+        if (!user) {
+          const newUser = await prisma.user.create({
+            data: {
+              telegramId: telegramId,
+              chatId: chatId,
+              userName: userName
+            }
+          })
+          return bot.sendMessage(
+            chatId,
+            `Добро пожаловать в наш бот: ${newUser.userName}`
+          )
+        }
+        return bot.sendMessage(chatId, `команда старт работает только раз`)
       }
 
       if (text === '/info') {
         const user = await getUser(chatId)
-
         return bot.sendMessage(
           chatId,
           `Ваше имя ${user.userName} и ${
@@ -66,10 +75,7 @@ const start = async () => {
 
       if (text === '/zakaz') {
         const users = await getAllUsers()
-
-        users.map((user) => {
-          return bot.sendMessage(user.chatId, 'Новый заказ')
-        })
+        users.forEach((user) => bot.sendMessage(user.chatId, 'Новый заказ'))
       }
 
       return bot.sendMessage(chatId, `Не понимаю я тебя, пробуй еще раз`)
@@ -79,32 +85,19 @@ const start = async () => {
     }
   })
 
-  // ===================
+  // Обработчик callback_query
   bot.on('callback_query', async (msg) => {
-    console.log(11, msg)
+    console.log(0, msg)
     const data = msg.data
     const chatId = String(msg.message.chat.id)
 
-    if (data === '/again') {
-      return bot.sendMessage(chatId, `Команда again`)
+    if (data === 'order_response') {
+      return bot.sendMessage(chatId, 'Ожидайте...')
     }
-
-    // const user = await prisma.user.findUnique({ where: { chatId } })
-    // const user = await getUser(chatId)
-
-    // Обновляем оба поля в базе данных
-    // await prisma.user.update({
-    // 	where: { chatId: chatId },
-    // 	data: {
-    // 		right: user.right,
-    // 		wrong: user.wrong,
-    // 	},
-    // })
   })
 }
 
-// ===================== отдельные fun  =====================
-
+// Функции для работы с пользователями и заказами
 async function getUser(chatId) {
   try {
     const user = await prisma.user.findUnique({ where: { chatId } })
@@ -114,6 +107,7 @@ async function getUser(chatId) {
     return error
   }
 }
+
 async function getAllUsers() {
   try {
     const users = await prisma.user.findMany()
@@ -124,13 +118,19 @@ async function getAllUsers() {
   }
 }
 
-// start()
-start().then(() => {
-  getAllUsers()
-    .then((users) => {
-      console.log(1, users)
-    })
-    .catch((error) => {
-      console.error('Ошибка при получении всех пользователей:', error)
-    })
-})
+async function sendOrderToUsers(orderText) {
+  const users = await getAllUsers()
+  users.forEach((user) => {
+    const opts = {
+      reply_markup: JSON.stringify({
+        inline_keyboard: [
+          [{ text: 'Принять', callback_data: 'order_response' }]
+        ]
+      })
+    }
+    bot.sendMessage(user.chatId, `Новый заказ: ${orderText}`, opts)
+  })
+}
+
+// Запуск бота
+start()
