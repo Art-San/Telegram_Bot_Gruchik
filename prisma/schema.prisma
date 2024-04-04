@@ -34,9 +34,9 @@ model Order {
 
 model OrderExecutor {
  orderId    Int
- userId     Int
+ userId     String
  order      Order @relation(fields: [orderId], references: [id])
- user       User @relation(fields: [userId], references: [id])
+ user       User @relation(fields: [userId], references: [telegramId])
 
  @@id([orderId, userId])
 }
