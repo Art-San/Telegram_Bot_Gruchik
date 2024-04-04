@@ -33,6 +33,7 @@ export const start = async () => {
         const user = await getUser(chatId)
         if (user && user.isAdmin) {
           createOrder(orderText).then((result) => {
+            /*TODO:*/
             console.log(`Заказ № 10 ${result}`)
             return bot.sendMessage(chatId, `Заказ № 10 ${result}`)
           })
