@@ -2,6 +2,27 @@ import { start } from './src/bot.js'
 
 start()
 
+// /my-telegram-bot
+//  /commands
+//     startCommand.js
+//     getCommand.js
+//  /handlers
+//     messageHandler.js
+//  /utils
+//     sendMessage.js
+//  index.js
+
+//  const TelegramBot = require('node-telegram-bot-api');
+//  const startCommand = require('./commands/startCommand');
+//  const getCommand = require('./commands/getCommand');
+//  const messageHandler = require('./handlers/messageHandler');
+
+//  const bot = new TelegramBot(process.env.BOT_TOKEN, {polling: true});
+
+//  bot.onText(/\/start/, startCommand);
+//  bot.onText(/\/get/, getCommand);
+//  bot.on('message', messageHandler);
+
 // import TelegramBot from 'node-telegram-bot-api'
 // import * as dotenv from 'dotenv'
 // import { PrismaClient } from '@prisma/client'
