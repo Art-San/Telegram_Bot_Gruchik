@@ -18,6 +18,8 @@ model User {
  telegramId   String     @unique
  chatId       String     @unique
  userName     String
+ phone        String?    @unique
+ rating       Int        @default(5)
  isAdmin      Boolean    @default(false)
  createdAt    DateTime   @default(now())
  updatedAt    DateTime   @updatedAt
@@ -25,11 +27,16 @@ model User {
 }
 
 model Order {
- id        Int      @id @default(autoincrement())
- text      String
- createdAt DateTime @default(now())
- updatedAt DateTime @updatedAt
- executors OrderExecutor[] // Указываем, что у заказа может быть несколько исполнителей
+ id            Int      @id @default(autoincrement())
+ text          String
+ address       String?
+ numExecutors  Int      @default(1)
+ hourCost      Int      @default(500)
+ hourCount     Int      @default(1)
+ createdAt     DateTime @default(now())
+ updatedAt     DateTime @updatedAt
+ executors     OrderExecutor[] // Указываем, что у заказа может быть несколько исполнителей
+ potentialExecutors String[]
 }
 
 model OrderExecutor {

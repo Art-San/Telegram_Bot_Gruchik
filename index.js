@@ -1,12 +1,12 @@
 import { start } from './src/bot.js'
-// import { getUser } from './src/user.js'
+// import { getUserById } from './src/user.js'
 
 start().then(() => {
   console.log('Bot play')
 })
 // start().then(() => {
 //   console.log('Bot play')
-//   getUser('721836748')
+//   getUserById('721836748')
 //     .then((user) => {
 //       console.log(user)
 //     })
@@ -78,7 +78,7 @@ start().then(() => {
 //     try {
 //       if (text.startsWith('/addOrder')) {
 //         const orderText = text.replace('/addOrder', '').trim()
-//         const user = await getUser(chatId)
+//         const user = await getUserById(chatId)
 //         if (user && user.isAdmin) {
 //           const newOrder = await prisma.order.create({
 //             data: {
@@ -99,7 +99,7 @@ start().then(() => {
 //       }
 
 //       if (text === '/start') {
-//         const user = await getUser(chatId)
+//         const user = await getUserById(chatId)
 //         if (!user) {
 //           const newUser = await prisma.user.create({
 //             data: {
@@ -140,7 +140,7 @@ start().then(() => {
 
 //     if (data.startsWith('select_order_')) {
 //       const orderId = data.split('_')[2]
-//       const users = await getUsersForOrder(orderId)
+//       const users = await getUserByIdsForOrder(orderId)
 //       if (users.length > 0) {
 //         // Формируем кнопки для выбора пользователя
 //         const keyboard = users.map((user) => [
@@ -175,12 +175,12 @@ start().then(() => {
 // }
 
 // // Функции для работы с пользователями и заказами
-// async function getUser(chatId) {
+// async function getUserById(chatId) {
 //   try {
 //     const user = await prisma.user.findUnique({ where: { chatId } })
 //     return user
 //   } catch (error) {
-//     console.log('Ошибка в getUser', error)
+//     console.log('Ошибка в getUserById', error)
 //     return error
 //   }
 // }
@@ -218,7 +218,7 @@ start().then(() => {
 //   }
 // }
 
-// async function getUsersForOrder(orderId) {
+// async function getUserByIdsForOrder(orderId) {
 //   const orderExecutors = await prisma.orderExecutor.findMany({
 //     where: { orderId: orderId },
 //     include: { user: true } // Предполагаем, что у вас есть связь между OrderExecutor и User

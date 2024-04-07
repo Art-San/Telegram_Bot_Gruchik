@@ -1,12 +1,14 @@
 import TelegramBot from 'node-telegram-bot-api'
 import * as dotenv from 'dotenv'
 import {
-  getUser,
+  getUserById,
   sendOrderToUsers,
   assignUserToOrder,
-  getUsersForOrder
+  getUsersForOrder,
+  createUser,
+  getAdminUsers
 } from './user.js'
-import { createOrder } from './order.js'
+import { addPotentialExecutor, createOrder } from './order.js'
 import { prisma } from './database.js'
 
 dotenv.config()
@@ -16,7 +18,8 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true })
 export const start = async () => {
   //   Определение команд бота
   bot.setMyCommands([
-    { command: '/start', description: 'Начальное приветствие' }
+    { command: '/start', description: 'Начальное приветствие' },
+    { command: '/profile', description: 'Инфа профиля' }
   ])
   //   Обработчик сообщений  ррр
   bot.on('message', async (ctx) => {
@@ -29,7 +32,7 @@ export const start = async () => {
 
     try {
       if (text === '/start') {
-        const user = await getUser(chatId)
+        const user = await getUserById(chatId)
         if (!user) {
           const newUser = await createUser(telegramId, chatId, userName)
           return bot.sendMessage(chatId, `Здравствуйте ${newUser.userName}`)
@@ -39,14 +42,17 @@ export const start = async () => {
       }
 
       if (text.startsWith('/addOrder')) {
-        console.log()
         const orderText = text.replace('/addOrder', '').trim()
-        const user = await getUser(chatId)
+        const user = await getUserById(chatId)
         if (user && user.isAdmin) {
           const newOrder = await createOrder(orderText)
-          console.log(0, newOrder)
+          // console.log(0, newOrder)
 
-          await sendOrderToUsers(bot, newOrder.id, newOrder.text, telegramId)
+          await sendOrderToUsers(bot, {
+            orderId: newOrder.id,
+            orderText: newOrder.text,
+            authorId: telegramId
+          })
           return bot.sendMessage(
             chatId,
             `Заказ № ${newOrder.id}: разослан юзерам`
@@ -63,41 +69,66 @@ export const start = async () => {
 
   //   Обработчик callback_query
   bot.on('callback_query', async (ctx) => {
-    console.log(0, ctx)
     const data = ctx.data
+    const executorId = String(ctx.from.id)
     const chatId = String(ctx.message.chat.id)
     console.log(0, data)
     console.log(1, chatId)
 
     if (data.startsWith('order_response_')) {
       const orderId = data.split('_')[2]
-      // await assignUserToOrder(chatId, orderId)
-      bot.sendMessage(721836748, 'Сообщение в бота.')
+      const authorId = data.split('_')[3]
+      const user = await getUserById(executorId)
+      console.log(0, user)
+      if (user) {
+        await addPotentialExecutor(bot, {
+          orderId,
+          executorId
+        })
+
+        const opts = {
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [
+                {
+                  text: 'Назначить',
+                  callback_data: `assign_user_${orderId}_${executorId}`
+                }
+              ]
+            ]
+          })
+        }
+
+        await bot.sendMessage(
+          authorId,
+          `Информация о пользователе: ${user.userName}`,
+          opts
+        )
+      } else {
+        return bot.sendMessage(chatId, 'Пользователь не найден.')
+      }
+
       return bot.sendMessage(chatId, 'Ожидайте несколько минут.')
     }
 
     // if (data.startsWith('order_response_')) {
-    //  const orderId = data.split('_')[2];
-    //  // Предположим, что у вас есть функция getUserByChatId, которая возвращает информацию о пользователе по chatId
-    //  const user = await getUserByChatId(chatId);
-    //  if (user) {
+    //   const orderId = data.split('_')[2]
+    //   // Предположим, что у вас есть функция getUserByChatId, которая возвращает информацию о пользователе по chatId
+    //   const user = await getUserById(chatId)
+    //   if (user) {
     //     // Создаем инлайн-клавиатуру с кнопкой "Назначить"
-    //     const opts = {
-    //       reply_markup: JSON.stringify({
-    //         inline_keyboard: [
-    //           [{ text: 'Назначить', callback_data: `assign_user_${orderId}_${user.id}` }]
-    //         ]
-    //       })
-    //     };
 
     //     // Отправляем сообщение с информацией о пользователе и кнопкой "Назначить"
-    //     await bot.sendMessage(chatId, `Информация о пользователе: ${user.userName}`, opts);
-    //  } else {
-    //     return bot.sendMessage(chatId, 'Пользователь не найден.');
-    //  }
+    //     await bot.sendMessage(
+    //       chatId,
+    //       `Информация о пользователе: ${user.userName}`,
+    //       opts
+    //     )
+    //   } else {
+    //     return bot.sendMessage(chatId, 'Пользователь не найден.')
+    //   }
 
-    //  // Отправляем сообщение о том, что заказ будет обработан
-    //  return bot.sendMessage(chatId, 'Ожидайте несколько минут.');
+    //   // Отправляем сообщение о том, что заказ будет обработан
     // }
 
     // if (data.startsWith('select_order_')) {

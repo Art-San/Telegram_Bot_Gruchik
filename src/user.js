@@ -27,7 +27,21 @@ export async function getAllUsers() {
   }
 }
 
-export async function getUser(chatId) {
+export async function getAdminUsers() {
+  try {
+    const adminUsers = await prisma.user.findMany({
+      where: {
+        isAdmin: true
+      }
+    })
+    return adminUsers
+  } catch (error) {
+    console.log('Ошибка при получении getAdminUsers', error)
+    return error
+  }
+}
+
+export async function getUserById(chatId) {
   try {
     const user = await prisma.user.findUnique({ where: { chatId } })
     return user
@@ -37,25 +51,36 @@ export async function getUser(chatId) {
   }
 }
 
-export async function sendOrderToUsers(bot, orderId, orderText, authorId) {
-  const users = await prisma.user.findMany({
-    where: {
-      chatId: {
-        not: authorId // Исключаем автора заказа
+export async function sendOrderToUsers(bot, orderDetails) {
+  const { orderId, orderText, authorId } = orderDetails
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        chatId: {
+          not: authorId // Исключаем автора заказа
+        }
       }
-    }
-  })
+    })
 
-  users.forEach((user) => {
-    const opts = {
-      reply_markup: JSON.stringify({
-        inline_keyboard: [
-          [{ text: 'Принять', callback_data: `order_response_${orderId}` }]
-        ]
-      })
-    }
-    bot.sendMessage(user.chatId, `Заказ № ${orderId}: ${orderText}`, opts)
-  })
+    users.forEach((user) => {
+      const opts = {
+        reply_markup: JSON.stringify({
+          inline_keyboard: [
+            [
+              {
+                text: 'Принять',
+                callback_data: `order_response_${orderId}_${authorId}`
+              }
+            ]
+          ]
+        })
+      }
+      bot.sendMessage(user.chatId, `Заказ № ${orderId}: ${orderText}`, opts)
+    })
+  } catch (error) {
+    console.log('Ошибка в sendOrderToUsers', error)
+    return error
+  }
 }
 
 export async function assignUserToOrder(userId, orderId) {
