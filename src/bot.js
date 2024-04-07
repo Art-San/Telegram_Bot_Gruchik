@@ -39,6 +39,7 @@ export const start = async () => {
       }
 
       if (text.startsWith('/addOrder')) {
+        console.log()
         const orderText = text.replace('/addOrder', '').trim()
         const user = await getUser(chatId)
         if (user && user.isAdmin) {
@@ -62,6 +63,7 @@ export const start = async () => {
 
   //   Обработчик callback_query
   bot.on('callback_query', async (ctx) => {
+    console.log(0, ctx)
     const data = ctx.data
     const chatId = String(ctx.message.chat.id)
     console.log(0, data)
@@ -70,6 +72,7 @@ export const start = async () => {
     if (data.startsWith('order_response_')) {
       const orderId = data.split('_')[2]
       // await assignUserToOrder(chatId, orderId)
+      bot.sendMessage(721836748, 'Сообщение в бота.')
       return bot.sendMessage(chatId, 'Ожидайте несколько минут.')
     }
 
