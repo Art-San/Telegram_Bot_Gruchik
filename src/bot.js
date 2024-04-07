@@ -8,7 +8,11 @@ import {
   createUser,
   getAdminUsers
 } from './user.js'
-import { addPotentialExecutor, createOrder } from './order.js'
+import {
+  addPotentialExecutor,
+  createOrder,
+  getPotentialExecutorIdOrder
+} from './order.js'
 import { prisma } from './database.js'
 
 dotenv.config()
@@ -79,8 +83,12 @@ export const start = async () => {
       const orderId = data.split('_')[2]
       const authorId = data.split('_')[3]
       const user = await getUserById(executorId)
-      console.log(0, user)
-      if (user) {
+      const isExecutorIdPresent = await getPotentialExecutorIdOrder(
+        orderId,
+        executorId
+      )
+      console.log(0, isExecutorIdPresent)
+      if (user && !isExecutorIdPresent) {
         await addPotentialExecutor(bot, {
           orderId,
           executorId
@@ -105,7 +113,7 @@ export const start = async () => {
           opts
         )
       } else {
-        return bot.sendMessage(chatId, 'Пользователь не найден.')
+        return bot.sendMessage(chatId, 'Хватит жмыкать.')
       }
 
       return bot.sendMessage(chatId, 'Ожидайте несколько минут.')

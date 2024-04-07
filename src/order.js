@@ -1,18 +1,18 @@
 import { prisma } from './database.js'
 
 export async function createOrder(orderText) {
-  const newOrder = {
-    id: 8,
-    text: `const Фeйк заявка = ${orderText}`,
-    createdAt: 20240407,
-    updatedAt: 20240407
-  }
+  // const newOrder = {
+  //   id: 8,
+  //   text: `const Фeйк заявка = ${orderText}`,
+  //   createdAt: 20240407,
+  //   updatedAt: 20240407
+  // }
   try {
-    // const newOrder = await prisma.order.create({
-    //   data: {
-    //     text: orderText
-    //   }
-    // })
+    const newOrder = await prisma.order.create({
+      data: {
+        text: orderText
+      }
+    })
 
     return newOrder
     // return orderText
@@ -20,6 +20,16 @@ export async function createOrder(orderText) {
     console.log('Ошибка в createOrder', error)
     return error
   }
+}
+
+export async function getPotentialExecutorIdOrder(orderId, executorId) {
+  const order = await prisma.order.findUnique({
+    where: { id: Number(orderId) },
+    select: { potentialExecutors: true }
+  })
+  const isExecutorId = order.potentialExecutors.includes(executorId)
+
+  return isExecutorId
 }
 
 export async function addPotentialExecutor(bot, data) {
@@ -32,24 +42,24 @@ export async function addPotentialExecutor(bot, data) {
     select: { potentialExecutors: true }
   })
 
-  if (!order) return
   console.log(1, 'addPotentialExecutor', order)
+  if (!order) return
   // Проверяем, существует ли уже такой исполнитель в списке
-  // if (order.potentialExecutors.includes(executorId)) {
-  //   console.log('Исполнитель уже добавлен в список потенциальных исполнителей.')
-  //   bot.sendMessage(executorId, `Нет смысла жать повторно`)
-  //   return
-  // }
+  if (order.potentialExecutors.includes(executorId)) {
+    console.log('Исполнитель уже добавлен в список потенциальных исполнителей.')
+    bot.sendMessage(executorId, `Нет смысла жать повторно`)
+    return
+  }
 
   // Добавляем нового потенциального исполнителя
-  // await prisma.order.update({
-  //   where: { id: orderId },
-  //   data: {
-  //     potentialExecutors: {
-  //       set: [...order.potentialExecutors, executorId]
-  //     }
-  //   }
-  // })
+  await prisma.order.update({
+    where: { id: Number(orderId) },
+    data: {
+      potentialExecutors: {
+        set: [...order.potentialExecutors, executorId]
+      }
+    }
+  })
 
   console.log(
     2,
