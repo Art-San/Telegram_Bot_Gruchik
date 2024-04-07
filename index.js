@@ -1,6 +1,19 @@
 import { start } from './src/bot.js'
+// import { getUser } from './src/user.js'
 
-start()
+start().then(() => {
+  console.log('Bot play')
+})
+// start().then(() => {
+//   console.log('Bot play')
+//   getUser('721836748')
+//     .then((user) => {
+//       console.log(user)
+//     })
+//     .catch((e) => {
+//       console.log(0, 'Ошибка при получение 721836748', e)
+//     })
+// })
 
 // /my-telegram-bot
 //  /commands

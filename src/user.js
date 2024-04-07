@@ -17,6 +17,16 @@ export async function createUser(telegramId, chatId, userName) {
   }
 }
 
+export async function getAllUsers() {
+  try {
+    const users = await prisma.user.findMany()
+    return users
+  } catch (error) {
+    console.log('Ошибка в getAllUsers', error)
+    return error
+  }
+}
+
 export async function getUser(chatId) {
   try {
     const user = await prisma.user.findUnique({ where: { chatId } })
@@ -27,7 +37,7 @@ export async function getUser(chatId) {
   }
 }
 
-export async function sendOrderToUsers(orderId, orderText, authorId) {
+export async function sendOrderToUsers(bot, orderId, orderText, authorId) {
   const users = await prisma.user.findMany({
     where: {
       chatId: {

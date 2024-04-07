@@ -47,6 +47,7 @@ const start = async () => {
               text: orderText
             }
           })
+
           await sendOrderToUsers(newOrder.id, newOrder.text, telegramId)
           return bot.sendMessage(
             chatId,

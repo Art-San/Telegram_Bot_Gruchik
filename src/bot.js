@@ -18,31 +18,16 @@ export const start = async () => {
   bot.setMyCommands([
     { command: '/start', description: 'Начальное приветствие' }
   ])
-  //   Обработчик сообщений
-  bot.on('message', async (msg) => {
-    const text = msg.text
-    const telegramId = String(msg.from.id)
-    const chatId = String(msg.chat.id)
-    const userName = msg.from.username
-      ? `@${msg.from.username}`
-      : `${msg.from.first_name} ${msg.from.last_name}`
+  //   Обработчик сообщений  ррр
+  bot.on('message', async (ctx) => {
+    const text = ctx.text
+    const telegramId = String(ctx.from.id)
+    const chatId = String(ctx.chat.id)
+    const userName = ctx.from.username
+      ? `@${ctx.from.username}`
+      : `${ctx.from.first_name} ${ctx.from.last_name}`
 
     try {
-      if (text.startsWith('/addOrder')) {
-        const orderText = text.replace('/addOrder', '').trim()
-        const user = await getUser(chatId)
-        if (user && user.isAdmin) {
-          createOrder(orderText).then((result) => {
-            /*TODO:*/
-            console.log(`Заказ № 10 ${result}`)
-            return bot.sendMessage(chatId, `Заказ № 10 ${result}`)
-          })
-          //   const newOrder = await createOrder(orderText)
-        } else {
-          return bot.sendMessage(chatId, 'У вас нет прав.')
-        }
-      }
-
       if (text === '/start') {
         const user = await getUser(chatId)
         if (!user) {
@@ -52,6 +37,23 @@ export const start = async () => {
 
         return bot.sendMessage(chatId, `Привет ${user.userName}`)
       }
+
+      if (text.startsWith('/addOrder')) {
+        const orderText = text.replace('/addOrder', '').trim()
+        const user = await getUser(chatId)
+        if (user && user.isAdmin) {
+          const newOrder = await createOrder(orderText)
+          console.log(0, newOrder)
+
+          await sendOrderToUsers(bot, newOrder.id, newOrder.text, telegramId)
+          return bot.sendMessage(
+            chatId,
+            `Заказ № ${newOrder.id}: разослан юзерам`
+          )
+        } else {
+          return bot.sendMessage(chatId, 'У вас нет прав.')
+        }
+      }
     } catch (error) {
       console.log(error)
       return bot.sendMessage(chatId, `Произошла ошибка 2: ${error.message}`)
@@ -59,7 +61,74 @@ export const start = async () => {
   })
 
   //   Обработчик callback_query
-  bot.on('callback_query', async (msg) => {
-    // Логика обработки callback_query
+  bot.on('callback_query', async (ctx) => {
+    const data = ctx.data
+    const chatId = String(ctx.message.chat.id)
+    console.log(0, data)
+    console.log(1, chatId)
+
+    if (data.startsWith('order_response_')) {
+      const orderId = data.split('_')[2]
+      // await assignUserToOrder(chatId, orderId)
+      return bot.sendMessage(chatId, 'Ожидайте несколько минут.')
+    }
+
+    // if (data.startsWith('order_response_')) {
+    //  const orderId = data.split('_')[2];
+    //  // Предположим, что у вас есть функция getUserByChatId, которая возвращает информацию о пользователе по chatId
+    //  const user = await getUserByChatId(chatId);
+    //  if (user) {
+    //     // Создаем инлайн-клавиатуру с кнопкой "Назначить"
+    //     const opts = {
+    //       reply_markup: JSON.stringify({
+    //         inline_keyboard: [
+    //           [{ text: 'Назначить', callback_data: `assign_user_${orderId}_${user.id}` }]
+    //         ]
+    //       })
+    //     };
+
+    //     // Отправляем сообщение с информацией о пользователе и кнопкой "Назначить"
+    //     await bot.sendMessage(chatId, `Информация о пользователе: ${user.userName}`, opts);
+    //  } else {
+    //     return bot.sendMessage(chatId, 'Пользователь не найден.');
+    //  }
+
+    //  // Отправляем сообщение о том, что заказ будет обработан
+    //  return bot.sendMessage(chatId, 'Ожидайте несколько минут.');
+    // }
+
+    // if (data.startsWith('select_order_')) {
+    //   const orderId = data.split('_')[2]
+    //   const users = await getUsersForOrder(orderId)
+    //   if (users.length > 0) {
+    //     // Формируем кнопки для выбора пользователя
+    //     const keyboard = users.map((user) => [
+    //       {
+    //         text: user.userName,
+    //         callback_data: `assign_user_${orderId}_${user.id}`
+    //       }
+    //     ])
+    //     const opts = {
+    //       reply_markup: JSON.stringify({
+    //         inline_keyboard: keyboard
+    //       })
+    //     }
+    //     return bot.sendMessage(chatId, 'Выберите исполнителей:', opts)
+    //   } else {
+    //     return bot.sendMessage(
+    //       chatId,
+    //       'Нет пользователей, откликнувшихся на заказ.'
+    //     )
+    //   }
+    // }
+
+    // if (data.startsWith('assign_user_')) {
+    //   const [_, orderId, userId] = data.split('_')
+    //   await assignUserToOrder(userId, orderId)
+    //   return bot.sendMessage(
+    //     chatId,
+    //     'Выбранный пользователь был добавлен к списку исполнителей.'
+    //   )
+    // }
   })
 }
