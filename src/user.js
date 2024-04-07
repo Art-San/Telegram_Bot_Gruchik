@@ -84,21 +84,24 @@ export async function sendOrderToUsers(bot, orderDetails) {
 }
 
 export async function assignUserToOrder(userId, orderId) {
+  console.log(1, userId)
+  console.log(2, orderId)
   const user = await prisma.user.findUnique({ where: { chatId: userId } })
-  if (user) {
-    await prisma.orderExecutor.create({
-      data: {
-        userId: user.id,
-        orderId: Number(orderId)
-      }
-    })
-  }
+  console.log(0, user)
+  // if (user) {
+  //   await prisma.orderExecutor.create({
+  //     data: {
+  //       userId: user.id,
+  //       orderId: Number(orderId)
+  //     }
+  //   })
+  // }
 }
 
-export async function getUsersForOrder(orderId) {
-  const orderExecutors = await prisma.orderExecutor.findMany({
-    where: { orderId: orderId },
-    include: { user: true } // Предполагаем, что у вас есть связь между OrderExecutor и User
-  })
-  return orderExecutors.map((oe) => oe.user)
-}
+// export async function getUsersForOrder(orderId) {
+//   const orderExecutors = await prisma.orderExecutor.findMany({
+//     where: { orderId: orderId },
+//     include: { user: true } // Предполагаем, что у вас есть связь между OrderExecutor и User
+//   })
+//   return orderExecutors.map((oe) => oe.user)
+// }

@@ -4,7 +4,7 @@ import {
   getUserById,
   sendOrderToUsers,
   assignUserToOrder,
-  getUsersForOrder,
+  // getUsersForOrder,
   createUser,
   getAdminUsers
 } from './user.js'
@@ -119,25 +119,18 @@ export const start = async () => {
       return bot.sendMessage(chatId, 'Ожидайте несколько минут.')
     }
 
-    // if (data.startsWith('order_response_')) {
-    //   const orderId = data.split('_')[2]
-    //   // Предположим, что у вас есть функция getUserByChatId, которая возвращает информацию о пользователе по chatId
-    //   const user = await getUserById(chatId)
-    //   if (user) {
-    //     // Создаем инлайн-клавиатуру с кнопкой "Назначить"
+    if (data.startsWith('assign_user_')) {
+      const [_, orderId, executorId] = data.split('_')
 
-    //     // Отправляем сообщение с информацией о пользователе и кнопкой "Назначить"
-    //     await bot.sendMessage(
-    //       chatId,
-    //       `Информация о пользователе: ${user.userName}`,
-    //       opts
-    //     )
-    //   } else {
-    //     return bot.sendMessage(chatId, 'Пользователь не найден.')
-    //   }
-
-    //   // Отправляем сообщение о том, что заказ будет обработан
-    // }
+      await assignUserToOrder(
+        orderId,
+        executorId
+      ) /*FIXME: разобратся с передачей айди в функциию*/
+      return bot.sendMessage(
+        chatId,
+        'Выбранный пользователь был добавлен к списку исполнителей.'
+      )
+    }
 
     // if (data.startsWith('select_order_')) {
     //   const orderId = data.split('_')[2]
@@ -162,15 +155,6 @@ export const start = async () => {
     //       'Нет пользователей, откликнувшихся на заказ.'
     //     )
     //   }
-    // }
-
-    // if (data.startsWith('assign_user_')) {
-    //   const [_, orderId, userId] = data.split('_')
-    //   await assignUserToOrder(userId, orderId)
-    //   return bot.sendMessage(
-    //     chatId,
-    //     'Выбранный пользователь был добавлен к списку исполнителей.'
-    //   )
     // }
   })
 }
